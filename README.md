@@ -1,12 +1,25 @@
 # Maestro Deck docs
 
-Source of the documentation published at maestrodeck.cloud/docs.
+Source of the documentation published at https://maestrodeck.cloud/docs.
+
+## Preview
+
+Requires Node 20+ and pnpm 10.
+
+```bash
+make preview
+```
+
+Then open http://localhost:3000. Pages reload as you edit them.
+
+`make build` builds every page and fails on broken MDX or `meta.json`, run it before opening a pull request.
 
 ## Layout
 
-- `*.mdx` / `meta.json`: pages and sidebar order (Fumadocs). Maps to `content/docs/` in the site.
-- `public/`: images referenced from the pages as `/docs/...`. Maps to `public/docs/` in the site.
+- `content/docs/`: pages (`.mdx`) and sidebar order (`meta.json`), rendered with [Fumadocs](https://fumadocs.dev).
+- `public/docs/`: images, referenced from pages as `/docs/...`.
+- `app/`, `lib/`: the preview app. The published site uses the same Fumadocs setup, so what you see locally is what ships.
 
-## Editing
+## Publishing
 
-Edit the `.mdx` files, update the matching `meta.json` when adding or moving a page, then push to `main`. The site pulls `main` at build time, so changes go live on its next deploy.
+The site pulls `content/docs/` and `public/docs/` from `main` at build time, so merged changes go live on its next deploy.
