@@ -9,4 +9,4 @@ Source of the documentation published at maestrodeck.cloud/docs.
 
 ## Editing
 
-Edit the `.mdx` files, update the matching `meta.json` when adding or moving a page, then push to `main`.
+Edit the `.mdx` files, update the matching `meta.json` when adding or moving a page, then push to `main`. The site pulls `main` at build time, so changes go live on its next deploy.
