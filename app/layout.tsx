@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={spaceGrotesk.variable} suppressHydrationWarning>
+    <html lang="en" className={`dark ${spaceGrotesk.variable}`} suppressHydrationWarning>
       <body>{children}</body>
     </html>
   );

@@ -1,4 +1,9 @@
+/* The site gets its base text color from its own theme, which this preview
+   does not load. Without it, Fumadocs text that inherits (like the previous /
+   next page cards) falls back to black. */
 body {
     margin: 0;
     font-family: var(--font-space-grotesk), sans-serif;
+    background-color: #171717;
+    color: var(--color-fd-foreground);
 }
