@@ -1,0 +1,14 @@
+---
+title: Using Local Mocks
+description: Run E2E flows against local mocks (e.g. Docker) so your tests stay autonomous and don't depend on remote infrastructure.
+---
+
+In many companies, the test infrastructure relies on remote environments with their own datasets. For E2E testing, especially with Maestro, it is recommended to use local mocks, for example with Docker. This way our tests can run autonomously without depending on remote infrastructure.
+
+<Callout type="info">
+Remember: we want to test our user flows in action, not the infrastructure itself.
+</Callout>
+
+<Callout type="info">
+If, on top of your local tests, you also want to run your flows against datasets on a remote server, just adjust the connection entries of your mocks inside your test workflows.
+</Callout>

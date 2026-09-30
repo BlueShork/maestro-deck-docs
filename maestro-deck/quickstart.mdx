@@ -1,0 +1,41 @@
+---
+title: Quickstart
+description: Run your first Maestro Deck flow in under five minutes.
+---
+
+Once Maestro Deck is installed on your machine, here's how to get a test running in under five minutes.
+
+## How it works
+
+<div className="fd-steps">
+
+### 1. Open a simulator or connect a device
+
+Launch a simulator, an emulator, or plug in a physical phone, then open it inside Maestro Deck. You need one connected before you can do anything else in the software.
+
+### 2. Create a flow file
+
+A flow is just a YAML file: an `appId` at the top, then the steps you want to run. See the [YAML schema](/docs/maestro-deck/reference/yaml) for the full syntax.
+
+```yaml
+appId: com.example.app
+---
+- launchApp
+- tapOn: "Login"
+```
+
+### 3. Build it visually with Inspector Mode
+
+Rather than writing every step by hand, click the arrow icon at the top right of your screen (or press "I") to turn on [Inspector Mode](/docs/maestro-deck/features/inspector-mode). Hover over your app to see its blocks, right-click one, and pick the action you want, it gets added straight to your flow.
+
+### 4. Run it
+
+Click "Run" and watch your test execute live on the connected simulator or device.
+
+</div>
+
+## Related
+
+- [Installation](/docs/maestro-deck/installation)
+- [Your first flow](/docs/maestro-deck/first-flow)
+- [Inspector Mode](/docs/maestro-deck/features/inspector-mode)

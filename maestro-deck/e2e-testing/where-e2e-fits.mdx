@@ -1,0 +1,43 @@
+---
+title: Unit, integration, E2E, where E2E fits
+description: What an E2E test actually tests, and how it differs from unit and integration tests.
+---
+
+E2E tests, unlike the other layers, are a direct reflection of the journeys the end user is going to take. Their goal is to reproduce user behavior inside the application, as naturally as possible, and make sure everything works, both in terms of behavior and in terms of what information is displayed (or hidden). It's the test that sits closest to a human being.
+
+For the other layers, the focus is narrower:
+
+- **Unit test**, validates that a discount-on-price function returns the right number (one function tested in isolation).
+- **Integration test**, validates that the login API call returns the right token when handed valid credentials.
+
+An E2E test looks more like this: I open the app, I type my email, I type my password, I tap on "Sign in", and I check that I land on the dashboard.
+
+<Callout type="info">
+E2E tests test what the others don't: the real user experience and the interactions between all the moving parts.
+</Callout>
+
+## Putting it into practice
+
+This is what the same scenario looks like as a Maestro flow:
+
+```yaml
+appId: com.example.app
+---
+- launchApp
+- tapOn: "Email"
+- inputText: "user@example.com"
+- tapOn: "Password"
+- inputText: "hunter2"
+- tapOn: "Sign in"
+- assertVisible: "Dashboard"
+```
+
+Seven lines of YAML. No code generation, no instrumentation hook, no compiled binary. The flow describes the journey the way a human would describe it, which is exactly the point.
+
+## Why E2E catches what other layers don't
+
+Unit and integration tests pass on assumptions: "given input X, this function returns Y". They cannot tell you that two correct components, wired together by a real navigation stack, on a real device, with real animations and a real keyboard popping up, actually let the user reach their goal. That's the gap E2E fills.
+
+<Callout type="warn">
+The corollary: when an E2E test fails, the root cause is rarely "the E2E test is wrong". It's almost always a real user-facing problem, or a flakiness issue worth investigating. Don't dismiss E2E failures the way you might dismiss a unit-test glitch.
+</Callout>

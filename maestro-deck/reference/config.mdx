@@ -1,0 +1,184 @@
+---
+title: Config file
+description: Project-level configuration for Maestro Deck, devices, default flags, hooks, and report destinations.
+---
+
+The config file is where you stop repeating yourself across `maestro test` invocations. Anything you'd otherwise pass on the command line every time, device target, default tags, retries, report directory, belongs here. It lives at `.maestro/deck.yaml` by convention. Override the path with `--deck-config <file>`.
+
+```yaml
+# .maestro/deck.yaml
+version: 1
+
+devices:
+  default: pixel-7
+  pool:
+    - id: pixel-7
+      platform: android
+      name: "Pixel 7 API 34"
+    - id: iphone-15
+      platform: ios
+      name: "iPhone 15"
+
+defaults:
+  retries: 1
+  includeTags: [smoke]
+  debugOutput: ./.maestro-debug
+  format: junit
+  output: ./reports/junit.xml
+
+hooks:
+  beforeAll: ./scripts/seed-mocks.sh
+  afterAll: ./scripts/teardown-mocks.sh
+
+env:
+  API_BASE_URL: http://localhost:4010
+```
+
+The config is plain YAML, no templating, no scripting. If you need conditional logic, generate the file in CI.
+
+## Top-level fields
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `version` | int | Schema version. Currently `1`. **Required**, future migrations rely on it. |
+| `devices` | object | Device pool and the default target. |
+| `defaults` | object | Defaults applied to every `maestro test` run. CLI flags override. |
+| `hooks` | object | Shell commands to run around the suite. |
+| `env` | map | Env vars exported to every flow's `${VAR}` scope. |
+| `reports` | object | Where structured reports are written. Optional sibling to `defaults`. |
+
+## `devices`
+
+```yaml
+devices:
+  default: pixel-7
+  pool:
+    - id: pixel-7
+      platform: android
+      name: "Pixel 7 API 34"
+      udid: emulator-5554        # optional, pins to a specific instance
+    - id: iphone-15
+      platform: ios
+      name: "iPhone 15"
+```
+
+| Field | Description |
+| --- | --- |
+| `default` | The `id` used when no `--device` is passed. |
+| `pool` | One entry per named device target. |
+| `pool[].id` | Local alias used by `--device <id>`. Free-form. |
+| `pool[].platform` | `ios` or `android`. |
+| `pool[].name` | Device or simulator name as known by the OS. |
+| `pool[].udid` | Optional. Pins to a specific physical device or running simulator. |
+
+<Callout type="info">
+Using named IDs (`pixel-7`) rather than raw UDIDs in CI is what makes a config portable across machines. The UDID changes every time the simulator is recreated; the alias doesn't.
+</Callout>
+
+## `defaults`
+
+Every key under `defaults` mirrors a CLI flag of [`maestro test`](/docs/maestro-deck/reference/cli#maestro-test). The CLI always wins.
+
+| Field | Maps to | Notes |
+| --- | --- | --- |
+| `retries` | `--retries` | Default `0`. |
+| `includeTags` | `--include-tags` | Array of strings. |
+| `excludeTags` | `--exclude-tags` | Array of strings. |
+| `debugOutput` | `--debug-output` | Directory path, relative to the config file. |
+| `format` | `--format` | `junit` or `html`. |
+| `output` | `--output` | Path to the structured report. |
+| `continueOnFailure` | `--continue-on-failure` | Boolean. |
+| `flattenDebugOutput` | `--flatten-debug-output` | Boolean. |
+
+## `hooks`
+
+```yaml
+hooks:
+  beforeAll: ./scripts/seed-mocks.sh
+  afterAll: ./scripts/teardown-mocks.sh
+  beforeEach: ./scripts/reset-state.sh
+  afterEach: ./scripts/collect-logs.sh
+```
+
+| Hook | When it runs |
+| --- | --- |
+| `beforeAll` | Once, before the first flow. Suite aborts on non-zero exit. |
+| `afterAll` | Once, after the last flow, even on failure. |
+| `beforeEach` | Before every flow. Failure aborts the flow but not the suite. |
+| `afterEach` | After every flow, even on failure. |
+
+Hooks inherit the env vars defined in `env:` plus `MAESTRO_FLOW`, `MAESTRO_DEVICE_ID`, and `MAESTRO_FLOW_RESULT` (the last one is only set in `afterEach` / `afterAll`).
+
+<Callout type="warn">
+Hooks run on the host that invoked Maestro Deck, not on the device. Don't put `adb` commands in `beforeEach` expecting them to apply to a specific device unless you pin `MAESTRO_DEVICE_ID` yourself.
+</Callout>
+
+## `env`
+
+```yaml
+env:
+  API_BASE_URL: http://localhost:4010
+  FEATURE_FLAG_PAYWALL: "true"
+```
+
+Exported to every flow's `${VAR}` scope. Flow-level `env:` overrides config-level `env:`, and `--env KEY=value` on the CLI overrides both.
+
+## `reports`
+
+```yaml
+reports:
+  junit:
+    path: ./reports/junit.xml
+  html:
+    path: ./reports/html/
+    includeScreenshots: true
+```
+
+Optional. Equivalent to passing `--format` + `--output` plus the screenshot toggle.
+
+## Minimal example
+
+```yaml
+version: 1
+devices:
+  default: pixel-7
+  pool:
+    - id: pixel-7
+      platform: android
+      name: "Pixel 7 API 34"
+```
+
+Everything else has sensible defaults.
+
+## CI-friendly example
+
+```yaml
+version: 1
+
+devices:
+  default: pixel-7
+  pool:
+    - id: pixel-7
+      platform: android
+      name: "Pixel 7 API 34"
+
+defaults:
+  retries: 1
+  excludeTags: [flaky, nightly]
+  debugOutput: ./.maestro-debug
+  format: junit
+  output: ./reports/junit.xml
+  flattenDebugOutput: true
+
+hooks:
+  beforeAll: ./scripts/start-mocks.sh
+  afterAll: ./scripts/stop-mocks.sh
+
+env:
+  API_BASE_URL: http://localhost:4010
+```
+
+## Related
+
+- [CLI reference](/docs/maestro-deck/reference/cli)
+- [YAML schema](/docs/maestro-deck/reference/yaml)

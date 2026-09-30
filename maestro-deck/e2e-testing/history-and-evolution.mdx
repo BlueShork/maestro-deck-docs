@@ -1,0 +1,58 @@
+---
+title: History and evolution
+description: From manual QA to declarative cloud-native testing, how mobile E2E got where it is today, and where Maestro fits.
+---
+
+Many tools have come and gone in the mobile E2E space, each one shaped by the constraints of its era. Looking at the timeline matters because it explains why today's tooling looks the way it does, and why Maestro feels different from what came before.
+
+![The evolution of E2E testing](/docs/e2e-testing/workflowsE2E.webp)
+
+## 2000 – 2010: the manual era
+
+This is the very beginning of mobile testing. Everything is artisanal: QA people with a phone in hand, walking through the app step by step. Applications were simpler back then, release cycles were long, and automation was not a priority.
+
+It worked because the surface area was small. It stopped working the moment app catalogs and OS fragmentation exploded.
+
+## 2010 – 2015: the first frameworks
+
+Smartphones become mainstream, and teams start to feel the pain of manual regression. The first frameworks appear:
+
+- **Appium**, based on the WebDriver protocol, becomes the open-source cross-platform standard.
+- **Calabash** (Xamarin), **UIAutomator** (Android), **XCTest / UIAutomation** (Apple), native counterparts.
+
+These tools all share the same flaw: tests are verbose, brittle, slow, and tightly coupled to the UI implementation. On top of that, writing or maintaining one requires deep technical knowledge of the codebase, which means only developers can really own them.
+
+<Callout type="warn">
+This is where the original split happened: the people closest to the user (QA) lacked the technical ability to write tests, and the people with the technical ability (developers) had less and less time to do it. That gap has shaped every conversation about mobile E2E since.
+</Callout>
+
+## 2015 – 2020: cross-platform maturation
+
+The industry shifts. **React Native** and **Flutter** rise, partly because teams shrink and code reuse between Android and iOS becomes a survival skill.
+
+In 2017, the Wix team releases **Detox**, which quickly emerges as the React Native alternative to Appium. It's faster, more stable, more developer-friendly.
+
+But the structural problem doesn't go away: you still need a developer to write the tests, and a developer to fix them when they break.
+
+## 2020 → today: declarative and cloud-native
+
+A new tool enters the room: **Maestro**.
+
+The approach is genuinely different from everything that came before:
+
+- Flows are declared in **YAML**, not code.
+- **Zero-setup, no instrumentation** of the application required.
+- Designed for **speed of writing** and simplicity over flexibility.
+- Readable both by technical and non-technical people, which matters a lot given who actually owns E2E today.
+
+Maestro is not tied to a specific app technology. Unlike Detox, it doesn't care whether your app is React Native, Flutter, native iOS or native Android. It also goes one step further: it can drive **the device itself**, not just the app. Open the device settings, toggle notifications, switch airplane mode, things that used to require either exposing API routes from the app or running ad-hoc `adb` commands (when they even existed for the setting you needed).
+
+<Callout type="info">
+That last part is the underrated breakthrough. Before Maestro, "testing what the user actually does" meant testing what the user does **inside the app**. Anything that required leaving the app was either skipped or faked. Maestro removes that wall.
+</Callout>
+
+## Where this leaves us
+
+The historical arc, in one line: **manual → automated-but-coupled → automated-and-decoupled → declarative and cloud-native**. Each step traded a constraint for a new one, and Maestro is the first generation where the constraint that finally moved is the human one: who can write a test, and who can read it.
+
+The rest of this documentation is built on that assumption. If you've used any of the tools mentioned above, you'll find familiar concepts, selectors, assertions, retries, but you'll also notice what's missing: instrumentation, build steps, language bindings. That absence is the point.

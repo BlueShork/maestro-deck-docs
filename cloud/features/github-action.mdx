@@ -1,0 +1,128 @@
+---
+title: GitHub Action
+description: Run your Maestro flows on MaestroDeck Cloud from CI with a single GitHub Actions step. Setup, inputs, outputs and full workflow examples.
+---
+
+The official [`BlueShork/maestro-action`](https://github.com/BlueShork/maestro-action) lets you run your Maestro flows on **MaestroDeck Cloud** straight from GitHub Actions. One step uploads your app and flows, runs them on a real simulator or emulator, waits for the result, and **fails the build if the tests fail**. No runner to provision, no simulator to boot in CI.
+
+```yaml
+- uses: BlueShork/maestro-action@v5
+  with:
+    api_key: ${{ secrets.MAESTRO_API_KEY }}
+    platform: android
+    app: build/app-release.apk
+    flow: .maestro/
+```
+
+## How it works
+
+The action uploads your build and flow files to MaestroDeck Cloud, runs them on the cloud device pool, polls for the result, and exits `0` (passed) or `1` (failed or error) so your pipeline goes green or red accordingly. Android jobs dispatch instantly; iOS jobs run on the macOS worker pool. It's the same pipeline as the web dashboard, triggered from CI.
+
+Two things are worth their own page: [web testing](/docs/cloud/features/web-testing), where the target is a URL rather than a build, and [visual regression](/docs/cloud/features/visual-regression), where the run compares its screenshots against a bank of references you keep in the repo.
+
+<Callout type="info">
+Because the run happens on MaestroDeck Cloud, your CI runner stays a plain `ubuntu-latest` box. You don't need macOS minutes or an Android emulator in the workflow.
+</Callout>
+
+## Setup
+
+<div className="fd-steps">
+
+### 1. Generate an API key
+
+Open your [MaestroDeck dashboard](https://dashboard.maestrodeck.cloud) profile page, find the **API keys** section, and click **Generate key**. Copy it right away. it's shown only once and looks like `mk_live_...`.
+
+### 2. Add it as a repository secret
+
+In your GitHub repo, go to **Settings → Secrets and variables → Actions → New repository secret**. Name it `MAESTRO_API_KEY` and paste the key. Never hard-code the key in your workflow file.
+
+### 3. Add the step to a workflow
+
+Create (or edit) a workflow under `.github/workflows/`, build your app artifact, then add the `maestro-action` step pointing at that artifact and your flows. See the examples below.
+
+</div>
+
+## Inputs
+
+| Input | Required | Default | Description |
+|---|---|---|---|
+| `api_key` | yes | | Your MaestroDeck API key (`mk_live_...`). Always pass it via a secret. |
+| `platform` | yes | | `ios`, `android` or `web`. |
+| `app` | for `ios` / `android` | | Path to the `.apk` (Android) or `.app.zip` (iOS). Ignored on web. |
+| `url` | for `web` | | The site to test. See [web testing](/docs/cloud/features/web-testing). |
+| `flow` | yes | | Path or glob to your Maestro `.yaml` flow files, or a directory of them. |
+| `email` | no | account email | Send the report to a specific address instead of your account email. |
+| `timeout` | no | `1800` | Max seconds to wait for the result before giving up. Does not change the run's own server-side timeout. |
+| `bank_path` | no | | Folder of reference `.png` images. Enables [visual regression](/docs/cloud/features/visual-regression). |
+| `app_name` | no | | Name under which to file the bank, grouping runs under **Apps** in the dashboard. |
+| `visual_strict` | no | `"false"` | Fail the step when the visual report shows a difference. |
+| `screen_size` | no | `1512x982` | Browser size for web runs, as `{width}x{height}`. Web only. |
+
+## Outputs
+
+| Output | Description |
+|---|---|
+| `job_id` | The created job id. |
+| `status` | Final status: `passed`, `failed`, or `error`. |
+| `report_url` | Link to the full report in the dashboard. |
+| `visual_changed` | Number of bank images whose capture differs from the reference. Empty when no bank was configured. |
+| `visual_missing` | Number of bank images with no matching capture. Empty when no bank was configured. |
+
+## Examples
+
+### Android
+
+Build your APK in an earlier step, then hand its path to the action:
+
+```yaml
+name: E2E
+on: [push]
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # ... build your APK into build/app-release.apk ...
+      - uses: BlueShork/maestro-action@v5
+        with:
+          api_key: ${{ secrets.MAESTRO_API_KEY }}
+          platform: android
+          app: build/app-release.apk
+          flow: .maestro/
+```
+
+### iOS
+
+Point `app` at a zipped `.app` bundle and `platform` at `ios`:
+
+```yaml
+- uses: BlueShork/maestro-action@v5
+  with:
+    api_key: ${{ secrets.MAESTRO_API_KEY }}
+    platform: ios
+    app: build/MyApp.app.zip
+    flow: .maestro/login.yaml
+```
+
+### Using the outputs
+
+Read `report_url`, `status` or `job_id` in later steps. Use `if: always()` so the link is printed even when the run fails:
+
+```yaml
+- uses: BlueShork/maestro-action@v5
+  id: maestro
+  with:
+    api_key: ${{ secrets.MAESTRO_API_KEY }}
+    platform: android
+    app: build/app-release.apk
+    flow: .maestro/
+- if: always()
+  run: echo "Report: ${{ steps.maestro.outputs.report_url }}"
+```
+
+## Notes
+
+- `flow` accepts a single file (`.maestro/login.yaml`), a glob (`.maestro/*.yaml`), or a directory (`.maestro/`, which picks up every `.yaml` / `.yml` inside).
+- Each step invocation consumes **one run** from your MaestroDeck quota.
+- The action needs `curl` and `jq`, both preinstalled on GitHub-hosted runners.
+- Pin to a version tag (`@v5`) for stable behaviour, or pin a full SHA if you want byte-for-byte reproducibility. `@v1` predates web and visual regression support.

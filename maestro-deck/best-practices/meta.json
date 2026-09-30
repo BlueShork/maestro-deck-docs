@@ -1,0 +1,9 @@
+{
+  "title": "Best Practices",
+  "pages": [
+    "disabling-animations",
+    "using-local-mocks",
+    "avoiding-duplicate-assertions",
+    "isolating-test-scenarios"
+  ]
+}

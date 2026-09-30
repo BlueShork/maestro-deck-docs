@@ -1,0 +1,89 @@
+---
+title: Glossary
+description: Definitions of Maestro and Maestro Deck terms, flow, tag, runner, selector, assertion, hierarchy, driver, and more.
+---
+
+A short glossary of the terms that appear in Maestro and Maestro Deck documentation. If you've used Appium, XCUITest, or Espresso, most concepts have a direct analogue.
+
+## Assertion
+
+A statement the flow expects to be true at a given moment, such as `assertVisible: "Order confirmed"`. Failing an assertion fails the step and the flow.
+
+## Continue On Failure
+
+A per-flow or per-step setting that lets the runner proceed past a failed step. Useful for cleanup steps; dangerous as a default because it hides real failures.
+
+## Driver
+
+The platform-specific component that talks to a device or simulator. Maestro has separate drivers for iOS (idb, xcrun) and Android (adb, UI Automator). The driver translates Maestro YAML actions into low-level OS calls.
+
+## Element
+
+A node in the [hierarchy](#hierarchy), a button, label, image, or container in the running app's view tree. A [selector](#selector) targets one or more elements.
+
+## Flow
+
+A YAML file describing a sequence of steps to execute against an app. The unit of work in Maestro. Lives in `.maestro/` by convention.
+
+## Hierarchy
+
+The view tree of the app at a moment in time. On iOS this is the accessibility tree; on Android, the UIAutomator dump. Maestro Deck's debug pane visualises the hierarchy and highlights what each selector matches.
+
+## Maestro CLI
+
+The command-line tool from mobile.dev that executes Maestro flows. Maestro Deck calls the CLI under the hood, it does not bundle its own.
+
+## Maestro Deck
+
+The source-available desktop client for the Maestro YAML format. Authors, inspects, and runs flows on iOS and Android.
+
+## Maestro Studio
+
+The proprietary desktop client from mobile.dev. Closed-source, account-required, sold per seat. Maestro Deck is the source-available alternative.
+
+## Retry
+
+Re-running a failed flow or step. Configured at the suite level (`--retries N`) or per step. Use sparingly, retries mask flakes rather than fix them.
+
+## Runner
+
+The component that executes a flow against a device. In Maestro Deck, the runner is the local Maestro CLI, invoked by the desktop app.
+
+## Selector
+
+The expression a step uses to identify an element. Common selectors:
+
+- `text:`, matches by visible text.
+- `id:`, matches by accessibility identifier.
+- `class:`, matches by widget class (Android) or control type (iOS).
+- index within a parent.
+
+Prefer `id` for stability.
+
+## Sharding
+
+Splitting a suite across N parallel CI jobs with `--shards N --shard-index I`. Each shard runs roughly `total / N` flows.
+
+## Step
+
+A single line of action inside a flow's steps array, `tapOn`, `inputText`, `assertVisible`, etc.
+
+## Subflow
+
+A reusable sequence of steps stored in its own YAML and invoked by `runFlow`. Useful for sign-in, language selection, permission prompts.
+
+## Tag
+
+A free-form string attached to a flow's config, used to filter at run time with `--include-tags` and `--exclude-tags`.
+
+## Test Suite
+
+The set of flows under `.maestro/` (or another directory passed to `maestro test`). The suite is what CI runs.
+
+## View hierarchy
+
+Synonym for [hierarchy](#hierarchy).
+
+## YAML flow format
+
+The plain-text format Maestro flows are written in. The same format is used by mobile.dev's Maestro CLI, Maestro Studio, and Maestro Deck, flows are portable across all three.

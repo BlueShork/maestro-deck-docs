@@ -1,0 +1,10 @@
+{
+  "title": "E2E Testing",
+  "pages": [
+    "the-testing-pyramid",
+    "mobile-specifics",
+    "where-e2e-fits",
+    "quality-stakes",
+    "history-and-evolution"
+  ]
+}

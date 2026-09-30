@@ -1,0 +1,30 @@
+---
+title: Avoiding Duplicate Assertions
+description: Skip redundant Maestro commands that check the same thing twice and slow down your flows for no benefit.
+---
+
+In Maestro, some commands are simply repetitions of others and make tests slower by checking exactly the same thing twice.
+
+Example: you want to make sure a button is displayed correctly and that the user can tap on it.
+
+You might be tempted to write two Maestro instructions, like this:
+
+```
+assertVisible:
+    text: "TEST"
+tapOn:
+    text: "TEST"
+```
+
+Here, `tapOn` alone is enough: for that command to execute, the text necessarily has to be visible before it can be tapped.
+
+```
+tapOn:
+    text: "TEST"
+```
+
+<Callout type="error">
+Duplicate assertions don't just add time, they hide intent. A reader looking at the flow later won't know whether the `assertVisible` was meant to catch a real edge case or was just left over. Keep your flows minimal so the meaningful checks stand out.
+</Callout>
+
+*If you'd like to suggest new practices, please open a proposal on the repository.*

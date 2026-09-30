@@ -1,0 +1,132 @@
+---
+title: Web testing
+description: Run Maestro flows against a website in the cloud from GitHub Actions. Target URLs, preview deployments, and browser size.
+---
+
+Maestro Deck Cloud runs your flows against a website in a real Chromium browser, the same way it runs them against an iOS simulator or an Android emulator. There is no build to produce and no artifact to upload: the target is a URL.
+
+```yaml
+- uses: BlueShork/maestro-action@v5
+  with:
+    api_key: ${{ secrets.MAESTRO_API_KEY }}
+    platform: web
+    url: https://example.com
+    flow: .maestro/
+```
+
+## Writing a web flow
+
+A web flow is a normal Maestro flow. The only difference is the header: where a mobile flow declares `appId`, a web flow declares `url`.
+
+```yaml
+url: https://example.com
+---
+- launchApp
+- assertVisible: "Sign in"
+- tapOn:
+    id: "email"
+- inputText: "dev@example.com"
+- takeScreenshot: login-filled
+```
+
+The `url` in the flow file is the page the flow itself opens. The `url` input on the action is the site the run targets, and it is what the platform records on the run. Keep them consistent, or point the flow at a path and the action at the origin.
+
+<Callout type="info">
+`launchApp` opens the browser at the flow's `url`. Everything after it is the same vocabulary you already use on mobile: `tapOn`, `assertVisible`, `inputText`, `takeScreenshot`.
+</Callout>
+
+## The site must be reachable from the internet
+
+The browser runs on Maestro Deck Cloud, not inside your GitHub runner. A server you start in the job is invisible to it, and `localhost`, private IP ranges and internal hostnames are rejected with `INVALID_URL` before the run starts.
+
+Test a deployed preview instead, and feed the action the URL your deploy step produced:
+
+```yaml
+- id: deploy
+  run: ./scripts/deploy-preview.sh
+- uses: BlueShork/maestro-action@v5
+  with:
+    api_key: ${{ secrets.MAESTRO_API_KEY }}
+    platform: web
+    url: ${{ steps.deploy.outputs.preview_url }}
+    flow: .maestro/checkout.yaml
+```
+
+## Browser size
+
+Web runs open the browser at **1512x982** by default, the logical resolution of a 14 inch MacBook Pro. It is a desktop viewport on purpose: at the 1024x768 a headless Chromium starts with, most sites serve their tablet breakpoint, hide the desktop navigation and show a burger menu, so flows written against the desktop layout fail for a reason that has nothing to do with the code under test.
+
+Set `screen_size` to run at another viewport:
+
+```yaml
+- uses: BlueShork/maestro-action@v5
+  with:
+    api_key: ${{ secrets.MAESTRO_API_KEY }}
+    platform: web
+    url: https://example.com
+    flow: .maestro/
+    screen_size: 1440x900
+```
+
+| | |
+|---|---|
+| Format | `{width}x{height}`, lowercase `x`, integers, no spaces |
+| Width | 320 to 3840 pixels |
+| Height | 320 to 2160 pixels |
+| Empty or unset | The default, `1512x982` |
+
+A malformed value or one outside those bounds is rejected with `INVALID_SCREEN_SIZE` before the run starts, so a typo costs you nothing from your quota.
+
+<Callout type="warn">
+`screen_size` is web-only. Sent with `platform: ios` or `platform: android`, the run is rejected with `SCREEN_SIZE_NOT_SUPPORTED` rather than quietly ignored. A silent drop would leave you comparing screenshots at a size you never got, with nothing to explain why.
+</Callout>
+
+### Testing several viewports
+
+Because the size is per-run, a matrix gives you one run per breakpoint:
+
+```yaml
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        size: ["390x844", "1024x768", "1512x982"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: BlueShork/maestro-action@v5
+        with:
+          api_key: ${{ secrets.MAESTRO_API_KEY }}
+          platform: web
+          url: https://example.com
+          flow: .maestro/
+          screen_size: ${{ matrix.size }}
+```
+
+Each leg is a separate run against your quota, and each gets its own report.
+
+### Size and screenshot banks
+
+If you also run [visual regression](/docs/cloud/features/visual-regression), the browser size is what decides whether your bank is usable at all. The platform refuses to compare two images of different dimensions and files the capture as `changed`, with no way to make it pass.
+
+One thing to know before you build that bank: `screen_size` sets the size of the **browser window**, while a screenshot captures the **viewport** inside it. The two differ by the height of the browser's own toolbar. A run at `1200x762` produces captures 1200 pixels wide, as asked, but around 619 pixels tall. The width you request is the width you get; the height is not.
+
+So do not assume a capture matches the value you passed. Run once at the size you want, take the captures that run produced as your references, and pin the same `screen_size` on every run that compares against them.
+
+## From the dashboard
+
+The **New test** form exposes the same thing: pick **Web**, enter the URL, and fill **Browser width** and **Browser height**. Leave both empty to use the default. The size is shown on the run page under **Browser size**, next to the identifier and the duration, and a rerun reuses the size of the run it reruns so the two stay comparable.
+
+## Inputs used by web runs
+
+| Input | Required | Default | Description |
+|---|---|---|---|
+| `api_key` | yes | | Your Maestro Deck API key (`mk_live_...`). Always pass it via a secret. |
+| `platform` | yes | | `web`. |
+| `url` | yes | | The site to test. Must be reachable from the public internet. |
+| `flow` | yes | | Path, glob, or directory of `.yaml` flows. |
+| `screen_size` | no | `1512x982` | Browser size as `{width}x{height}`. |
+| `email` | no | account email | Send the report elsewhere than your account email. |
+| `timeout` | no | `1800` | Seconds to wait for the result before giving up. |
+
+`app` is ignored on web. See the [GitHub Action guide](/docs/cloud/features/github-action) for the inputs shared with mobile runs, and [visual regression](/docs/cloud/features/visual-regression) for `bank_path`, `app_name` and `visual_strict`.

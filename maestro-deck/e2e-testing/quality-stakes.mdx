@@ -1,0 +1,31 @@
+---
+title: Quality stakes in the enterprise
+description: Why mobile E2E is a business and brand concern, not just a technical one.
+---
+
+In a large company, mobile software quality is not just a technical problem to solve for the engineering teams. It's a real business and brand-image stake.
+
+Picture a telco like Bouygues Telecom and its image: if the next version of the mobile app shipped to the stores is full of issues, bills you can't pay, options you can't configure, support you can't reach, the company gets hit directly. Revenue takes a hit, and so does the brand's reputation for delivering quality products, especially in an increasingly tense competitive landscape.
+
+<Callout type="warn">
+A single broken release on a flagship mobile app can do more damage to brand trust than months of marketing can repair. Mobile quality is not a back-office concern.
+</Callout>
+
+## The shifting responsibility
+
+In these companies, release pressure keeps growing and shipping cadence keeps accelerating. At the same time, we observe a clear inversion of test ownership:
+
+- Developers test less and less, both because they have less time and because the team structure has changed.
+- The actual walking-through-the-app falls back to QA, most often manually, when no strategy is in place. Or, when something has been automated, through tests written by developers that progressively rot as nobody updates them.
+
+The result is a structural mismatch: the people now expected to own E2E quality are the ones with the fewest tools to **create, manage and run** their tests properly.
+
+<Callout type="info">
+The point isn't that developers should write all the E2E tests, nor that QA should be left alone with no support. It's that the tooling needs to match the new ownership, and most of today's frameworks were designed for the old one.
+</Callout>
+
+## Multi-app reality
+
+The picture gets worse at scale. A large group rarely has one mobile app, it has several (customer, business, internal). Each one needs its own suite, its own device coverage, its own release cadence. Without a shared, accessible tooling layer, every team reinvents the same patterns, with the same fragility, and the same maintenance debt years later.
+
+This is the context in which the rest of these pages, and Maestro Deck itself, make sense.

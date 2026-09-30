@@ -1,0 +1,75 @@
+---
+title: Disabling Animations
+description: Reduce flakiness and total run time by disabling app-level and system-level animations during Maestro runs.
+---
+
+When testing your applications, whether on a physical device or an emulator, your apps usually ship with animations to improve the user experience. In the context of our tests, whether LOCAL or CLOUD, these animations are not useful for our workflows, and they are also responsible for occasional flakiness. Reducing animations also shortens the duration across hundreds of tests, and it doesn't change the behavior you actually want to test.
+
+<Callout type="info">
+Remember: you want to test how the application behaves when a user goes through it, not the cosmetic animations of the app.
+</Callout>
+
+To do so, several methods can be used. Here I'll give you an implementation to reduce them inside your application, plus another one tied directly to the system-level animations of the physical device.
+
+<Callout type="info">
+Animations are a UX concern, not a behavior concern. As long as the user-facing logic stays the same, disabling them during E2E runs is safe and recommended.
+</Callout>
+
+## Application animations
+
+To reduce the animations inside your app, you can use the Makefile of your project, a file widely used across the industry. You just need to add the following commands:
+
+| Command | Effect |
+| --- | --- |
+| `make maestro-disable-animation` | Disables animations |
+| `make maestro-enable-animation` | Enables animations |
+
+In practice:
+
+```
+maestro-disable-animation: sed -i '' 's/^DISABLE_ANIMATION_MAESTRO=.*/DISABLE_ANIMATION_MAESTRO=true/' .env.local
+```
+
+```
+maestro-enable-animation: sed -i '' 's/^DISABLE_ANIMATION_MAESTRO=.*/DISABLE_ANIMATION_MAESTRO=false/' .env.local
+```
+
+These commands add or update the value of the `DISABLE_ANIMATION_MAESTRO` variable directly inside your project's `.env.local`.
+
+## System animations (Android)
+
+For system-level animations, here are the commands:
+
+```
+adb shell settings put global window_animation_scale 0
+adb shell settings put global transition_animation_scale 0
+adb shell settings put global animator_duration_scale 0
+```
+
+To re-enable them:
+
+```
+adb shell settings put global window_animation_scale 1
+adb shell settings put global transition_animation_scale 1
+adb shell settings put global animator_duration_scale 1
+```
+
+To disable everything in a single command, you can mix it all together:
+
+```
+maestro-disable-animation:
+    sed -i '' 's/^DISABLE_ANIMATION_MAESTRO=.*/DISABLE_ANIMATION_MAESTRO=true/' .env.local
+    adb shell settings put global window_animation_scale 0
+    adb shell settings put global transition_animation_scale 0
+    adb shell settings put global animator_duration_scale 0
+
+maestro-enable-animation:
+    sed -i '' 's/^DISABLE_ANIMATION_MAESTRO=.*/DISABLE_ANIMATION_MAESTRO=false/' .env.local
+    adb shell settings put global window_animation_scale 1
+    adb shell settings put global transition_animation_scale 1
+    adb shell settings put global animator_duration_scale 1
+```
+
+<Callout type="warn">
+For some development frameworks, you'll need to rebuild the native parts of your app to actually apply these changes.
+</Callout>

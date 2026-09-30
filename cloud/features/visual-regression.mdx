@@ -1,0 +1,122 @@
+---
+title: Visual regression
+description: Compare each run's screenshots against a bank of reference images on Maestro Deck Cloud, and fail the build on a visual change from GitHub Actions.
+---
+
+Functional assertions tell you a button is still there. They say nothing about it having turned white on white, moved behind a banner, or lost its icon. Visual regression closes that gap: you commit a folder of reference images, and every run compares its own screenshots against them.
+
+It works the same way on `ios`, `android` and `web`.
+
+```yaml
+- uses: BlueShork/maestro-action@v5
+  id: maestro
+  with:
+    api_key: ${{ secrets.MAESTRO_API_KEY }}
+    platform: android
+    app: build/app-release.apk
+    flow: .maestro/
+    bank_path: .maestro/bank
+    app_name: my-app
+    visual_strict: "true"
+```
+
+## How it works
+
+<div className="fd-steps">
+
+### 1. Your flows take screenshots
+
+Every `takeScreenshot: home` in a flow writes `home.png` during the run. Those captures are what gets compared. A flow with no `takeScreenshot` produces nothing to compare.
+
+### 2. The action uploads your bank
+
+`bank_path` points at a folder of `.png` files in your repo. The action uploads them alongside the flows, as the reference for this run.
+
+### 3. The platform matches by filename
+
+`home.png` in the bank is compared against the capture named `home.png`. Matching is by filename only, recursively, so nested flows writing into subfolders still line up.
+
+### 4. Each reference gets a verdict
+
+`matched`, `changed`, or `missing`. The counters land on the run, in the report, and on the step's outputs.
+
+</div>
+
+The bank is the set of images under examination, not the captures. A capture with no matching reference is ignored, since you have not vouched for it yet. A reference with no matching capture is `missing`, because a flow that stopped taking a screenshot is worth reporting.
+
+## Building the first bank
+
+There is no way around running once first. Run your flows with `takeScreenshot` and no `bank_path`, open the report, and take the captures it produced as your starting references. Commit them into `.maestro/bank`, then add `bank_path` to the step.
+
+<Callout type="warn">
+Take the references from a run, never from a screenshot you produced some other way. The platform refuses to compare two images of different dimensions and files the capture as `changed`, with no ratio and no diff image. On web, note that `screen_size` sets the browser window while the capture is the viewport inside it, so a capture is shorter than the size you asked for, see [web testing](/docs/cloud/features/web-testing). On mobile it means keeping the same device profile.
+</Callout>
+
+From then on, a deliberate UI change is a diff on those `.png` files in the same pull request as the code that caused it. That is the point of keeping the bank in the repo rather than on the platform: your references are reviewed like everything else.
+
+## What counts as changed
+
+Comparison is per pixel, on a perceptual color delta, with two knobs applied for you:
+
+- A pixel counts as different when its color delta exceeds a **tolerance** of `0.1`. Antialiasing and a compression artifact do not trip it.
+- An image is `changed` when more than **0.1%** of its compared pixels are different. Below that, `matched`.
+
+Some bands are excluded from the comparison entirely, because they carry a clock and a battery level that change on their own:
+
+| Platform | Top | Bottom | Right |
+|---|---|---|---|
+| iOS | 6% | 4% | 2% |
+| Android | 4.5% | 4.5% | 2% |
+| Web | none | none | none |
+
+Excluded pixels do not count in the denominator either, so masking never dilutes a real change elsewhere on the screen.
+
+## Failing the build
+
+By default a visual change is recorded, not enforced: the run finishes, the report shows the diffs, and your pipeline stays green. Set `visual_strict: "true"` to fail the step when any image is `changed` or `missing`.
+
+```yaml
+- uses: BlueShork/maestro-action@v5
+  id: maestro
+  with:
+    api_key: ${{ secrets.MAESTRO_API_KEY }}
+    platform: web
+    url: https://example.com
+    flow: .maestro/
+    bank_path: .maestro/bank
+    visual_strict: "true"
+- if: always()
+  run: |
+    echo "changed: ${{ steps.maestro.outputs.visual_changed }}"
+    echo "missing: ${{ steps.maestro.outputs.visual_missing }}"
+```
+
+<Callout type="info">
+`visual_strict` fails the **step**, never the run. A run's own status comes from your functional assertions alone, so it can be `passed` and still carry changed images. Whether that stops a merge is a policy decision, and it stays in your workflow file.
+</Callout>
+
+The `visual_changed` and `visual_missing` outputs are readable even when the step fails, so an `if: always()` step can post them. Both are empty strings when no bank was configured.
+
+## Grouping runs under an app
+
+`app_name` files the bank under a named app on the platform and groups every run of that app together in the dashboard's **Apps** section. It only means something when `bank_path` is set, and a bank without it still gets its comparison. You just lose the per-app history.
+
+## Limits
+
+| | |
+|---|---|
+| Images per bank | 200 |
+| Size per image | 10 MB |
+| Format | `.png` only |
+
+Filenames are sanitized: every character outside `a-z`, `A-Z`, `0-9`, `.`, `_` and `-` becomes an underscore. Two references that collide once sanitized are rejected, so `mon écran.png` and `mon_écran.png` cannot both be in the same bank. The action checks this locally before uploading anything.
+
+## Reading the report
+
+The run page shows each reference next to its capture and, when they differ, a diff image with the changed pixels painted red. Alongside it, the four counters: total, matched, changed, missing.
+
+The same counters are on the CI status endpoint the action polls, which is how `visual_strict` decides. Per-image detail and the images themselves stay behind your dashboard login.
+
+## Turning it off
+
+Leave `bank_path` empty or drop it. No bank is sent, no comparison runs, `visual_strict` becomes a no-op, and the two outputs come back as empty strings. Nothing else about the run changes.

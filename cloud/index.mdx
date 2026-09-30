@@ -1,0 +1,34 @@
+---
+title: Overview
+description: Maestro Deck Cloud, run your Maestro flows on real simulators, emulators, and browsers straight from CI.
+---
+
+<div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", margin: "3.5rem 0 4rem" }}>
+  <img
+    src="/brand/logo-horizontal-white-cloud.svg"
+    alt="Maestro Deck Cloud"
+    className="docs-logo"
+    style={{ width: "100%", maxWidth: "28rem", height: "auto" }}
+  />
+  <div style={{ marginTop: "1.5rem", fontSize: "1.125rem", color: "var(--color-fd-muted-foreground)", maxWidth: "40rem" }}>
+    Run your Maestro flows on real simulators, emulators, and browsers, straight from CI.
+  </div>
+</div>
+
+# Overview
+
+Welcome to the Maestro Deck Cloud documentation.
+
+Maestro Deck Cloud is the hosted platform that runs your flows on real devices, no runner to provision, no simulator to boot yourself. One step in your CI uploads your app (or a URL, for web) and your flows, runs them on the cloud device pool, and fails the build if the tests fail.
+
+## What's in here
+
+- **GitHub Action**, run your flows on Maestro Deck Cloud from a single CI step.
+- **Web testing**, the same pipeline, targeting a URL in a real Chromium browser instead of a build.
+- **Visual regression**, catch UI changes by comparing each run's screenshots against a bank of references.
+
+## Why Maestro Deck Cloud
+
+- **No infrastructure**, no runner to provision, no simulator or emulator to boot in CI.
+- **Same flows, same YAML**, the exact flows you already write and run locally with Maestro Deck.
+- **One pipeline, every platform**, iOS, Android, and web, through the same GitHub Action.

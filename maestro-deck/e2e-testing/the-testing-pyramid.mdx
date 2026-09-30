@@ -1,0 +1,22 @@
+---
+title: The testing pyramid
+description: Where E2E tests sit in the testing pyramid, and why each layer exists.
+---
+
+In a company, software testing is nothing new. Every type of test in our testing pyramid has its own role and checks a different aspect of our code. When the whole pyramid is valid, it gives us the confidence that our solution behaves as expected (without external events interfering). Each test does not cost the same in execution time, in money, or in the kind of result we are checking.
+
+![Testing pyramid for a mobile application](/docs/e2e-testing/pyramidtest.webp)
+
+The diagram above shows the role of each test inside our pyramid. The E2E tests that we'll detail throughout these pages sit at the top, the closest to the end user. Every layer is complementary to the one below: together they form a barrier against the various kinds of failures that could otherwise reach production.
+<br/>
+<Callout type="info">
+The shape matters. A heavy top (lots of E2E, few unit tests) is slow, expensive and flaky. A heavy bottom with a small but well-chosen E2E layer is what actually scales.
+</Callout>
+
+## Quick recap of each layer
+
+- **Unit tests**, validate a single function in isolation (a price-discount calculation, a date formatter). Fast, cheap, run on every commit.
+- **Integration tests**, validate that two or more pieces work together (an API call returning the right login token, a repository talking to a real database). Medium speed and cost, typically run on every PR.
+- **E2E tests**, validate full user journeys, from launching the app to reaching the goal. Slow and costly, typically run nightly or on release.
+
+The next page covers what makes mobile E2E specifically harder than its web counterpart.

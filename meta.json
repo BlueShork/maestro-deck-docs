@@ -1,0 +1,21 @@
+{
+  "title": "Docs",
+  "root": true,
+  "pages": [
+    "index",
+    "---Learn---",
+    "maestro-deck/e2e-testing",
+    "maestro-deck/best-practices",
+    "---Maestro Deck---",
+    "maestro-deck/installation",
+    "maestro-deck/quickstart",
+    "maestro-deck/first-flow",
+    "maestro-deck/features",
+    "---Maestro Deck Cloud---",
+    "cloud/index",
+    "cloud/features",
+    "---References---",
+    "maestro-deck/migration",
+    "maestro-deck/reference"
+  ]
+}

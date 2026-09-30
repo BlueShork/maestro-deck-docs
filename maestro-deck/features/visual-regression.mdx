@@ -1,0 +1,53 @@
+---
+title: Visual Regression
+description: Visual Regression in Maestro Deck.
+---
+
+Maestro Deck also natively embeds a feature in the software that lets you control your different application or web screens, and lets you directly determine a visual regression during your test phases.
+
+<Callout type="info">
+  Visual Regression is a feature you need to activate in your software's settings.
+</Callout>
+
+## How it works
+
+<div className="fd-steps">
+
+### 1. Add the screenshot block to your test file
+
+Once the option is activated, all you need to do in your test file is add:
+
+```yaml
+- waitForAnimationToEnd
+- takeScreenshot: name-of-your-screenshot-here
+- waitForAnimationToEnd
+```
+
+This block, which you can duplicate as many times as you want, tells the software to take a screenshot every time you run a test.
+
+### 2. Screenshots are stored in a reference bank
+
+With the Visual Regression option, your screenshot will automatically be moved into a bank of reference images for your application.
+
+### 3. Every run compares against the bank
+
+On each new run of your test file, when the software reaches your `takeScreenshot`, if it already exists in the bank, it will compare it at the end of the run to find out the percentage of change. If they're identical, you won't see any issue.
+
+### 4. Review differences and update the bank
+
+If the screenshots differ from the ones in the bank, a window will open showing the differences with the reference image in red. You'll then have 2 choices: confirm that it is indeed a visual regression, or replace the bank image with the one the test just produced. That's how you can update your reference bank.
+
+</div>
+
+## Video walkthrough
+
+<video
+  src="/visual-regression-feature.mp4"
+  poster="/visual-regression-feature-poster.webp"
+  width={1600}
+  height={1046}
+  controls
+  playsInline
+  preload="metadata"
+  style={{ width: "100%", height: "auto", borderRadius: "0.5rem" }}
+/>

@@ -1,0 +1,56 @@
+---
+title: Isolating Test Scenarios
+description: Write Maestro flows that run independently, from a clean state, so a single failure doesn't cascade across your whole suite.
+---
+
+One of the most common mistakes in E2E testing is writing scenarios that depend on each other. A test that only passes because a previous test left the app in the right state is not a test, it's a coincidence. As soon as one scenario fails, every test downstream collapses with it, and you end up spending more time figuring out which failure is the real one than fixing the actual bug.
+
+Each Maestro flow should be able to run on its own, from a clean and predictable starting state, and it should leave the application in a state that doesn't pollute the next run.
+
+<Callout type="info">
+Remember: a test that can't run in isolation isn't reliable, it's lucky.
+</Callout>
+
+Concretely, this means a few things:
+
+- Start each flow from a known entry point (a `launchApp` with `clearState: true` when needed, or a dedicated setup flow).
+- Don't rely on data created by a previous scenario. If your test needs a logged-in user, log them in inside the flow, or factor it out into a reusable subflow.
+- Avoid sharing mutable state (account, cart, draft, etc.) between scenarios. If two flows touch the same resource, one of them will eventually break the other.
+
+Example of a flow that **depends** on a previous one:
+
+```
+# scenario-2.yaml
+appId: com.example.app
+---
+- tapOn: "Open my cart"     # assumes a product was added in scenario-1
+- assertVisible: "Checkout"
+```
+
+Same intent, written to run **in isolation**:
+
+```
+# scenario-2.yaml
+appId: com.example.app
+---
+- launchApp:
+    clearState: true
+- runFlow: flows/login.yaml
+- runFlow: flows/add-product-to-cart.yaml
+- tapOn: "Open my cart"
+- assertVisible: "Checkout"
+```
+
+It's a bit more verbose, but every run starts from the same place and the failure of one scenario never cascades into the others.
+
+<Callout type="warn">
+Running with `clearState: true` everywhere can slow things down on large suites. A good middle ground is to clear state at the start of each *feature group* and rely on small setup subflows (`flows/login.yaml`, `flows/seed-cart.yaml`, ...) inside each scenario. You get isolation without paying the full cold-start cost on every single test.
+</Callout>
+
+<Callout type="info">
+If two scenarios genuinely share a long setup (onboarding, KYC, multi-step configuration), extract it into a reusable subflow with `runFlow` rather than chaining tests. The subflow becomes the contract; each scenario stays independent.
+</Callout>
+
+<Callout type="error">
+Never use a passing test as a setup step for another one. The day that "setup" test fails for an unrelated reason, you'll lose visibility on every scenario that silently depended on it.
+</Callout>

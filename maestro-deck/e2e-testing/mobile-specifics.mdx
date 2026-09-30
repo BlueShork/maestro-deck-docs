@@ -1,0 +1,33 @@
+---
+title: Mobile specifics
+description: Why testing a mobile app is fundamentally different from testing a web app.
+---
+
+Testing a mobile application is completely different from the testing we are used to in the web world. On mobile, we are tightly bound to OS versions, to manufacturer distributions, and even to specific device models (think Samsung Galaxy Fold) that can behave differently from one another. On top of that, the ongoing rivalry between Android and iOS fragments the way things work between the two ecosystems.
+
+Unlike web developers, mobile developers don't have the luxury of a single browser to validate their features. They have to go through two different paths:
+
+- Test on an **emulator** that reproduces the behavior of a real phone.
+- Test on a **physical device**.
+
+Both approaches have pros and cons.
+
+## Testing on an emulator
+
+The simplest and fastest option for a developer is to spin up an emulator straight from their machine. It's lightweight, it's efficient, and in most cases it covers what teams need.
+
+But an emulator does not have a real camera, no fingerprint sensor, and its Wi-Fi is the host machine's network. The moment your test depends on hardware that doesn't exist in the emulator, you have to switch to a physical device.
+
+<Callout type="warn">
+Use cases that emulators don't cover reliably: biometrics, camera/QR scanning, push notifications under flaky network, NFC, real Bluetooth pairing, GPS in motion. If your scenario lives in one of those, an emulator-only suite will give you false confidence.
+</Callout>
+
+## Testing on physical devices
+
+Physical devices work, but they come with their own cost. You need to invest in recent and older models, with different Android versions, and you also need both iOS and Android coverage. Outside of very large groups, getting all those phones in hand is rarely realistic. And even if you somehow managed to own every phone on the planet, running your suite on each of them would take an enormous amount of time.
+
+<Callout type="info">
+A pragmatic middle ground most teams converge on: emulators for the bulk of the suite (speed, parallelism), physical devices for the smoke suite and for scenarios that rely on real hardware. Cloud device farms can fill the gap for everything in between.
+</Callout>
+
+This combination of OS fragmentation, hardware diversity and per-device run time is exactly what makes mobile E2E its own discipline, distinct from web E2E.

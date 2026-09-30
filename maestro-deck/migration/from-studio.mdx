@@ -1,0 +1,43 @@
+---
+title: From Maestro Studio
+description: Move your existing Maestro Studio flows to Maestro Deck without touching the YAML.
+---
+
+If you're coming from Maestro Studio, the good news is that there is almost nothing to migrate. Maestro Deck uses exactly the same YAML nomenclature and the same underlying CLI as Maestro. The workflows you wrote with `maestro-cli` or through Maestro Studio are backwards-compatible as-is, no rewrite, no command mapping, no different "dialect".
+
+<Callout type="info">
+Same YAML, same CLI, same selectors. If your flow runs today with `maestro test my-flow.yaml`, it runs with Maestro Deck without a single modification.
+</Callout>
+
+## What actually changes
+
+Nothing inside your `.yaml` files. Everything in the layer around them:
+
+- Your flows stay in `.maestro/` (or wherever they live today), with the same structure: `appId` + `---` + steps.
+- Selectors (`text:`, `id:`, `class:`, `point:`) work identically.
+- Commands (`tapOn`, `inputText`, `assertVisible`, `runFlow`, `repeat`, `retry`, etc.) are the same. See the [YAML schema](/docs/maestro-deck/reference/yaml).
+- Tags, `env`, `onFlowStart` and `onFlowComplete` keep working.
+- Your CI commands (`maestro test --include-tags=smoke .maestro/`) remain valid as-is.
+
+What changes is the environment around the flows: you gain a project-level config (`.maestro/deck.yaml`), the richer Deck reports, and the source-available desktop inspector in place of the proprietary app.
+
+## Steps
+
+1. Install Maestro Deck. The `maestro` CLI is still the one from mobile.dev, Maestro Deck does not replace it, it builds on top of it.
+2. Point Deck at your existing flows directory. No import, no conversion.
+3. (Optional) Create a `.maestro/deck.yaml` to centralize your device pool, default tags and hooks. See [config file](/docs/maestro-deck/reference/config).
+4. Run your flows the way you used to.
+
+<Callout type="warn">
+Maestro Deck pins a specific version of the upstream Maestro CLI per release. If you had an older (or newer) `maestro` installed in parallel, check the versions with `maestro --version` before migrating a large suite, very recent or very old commands may not be supported by every version.
+</Callout>
+
+## What is not covered
+
+- Anything specific to Maestro Studio Cloud (remote runs stored on their infra, SaaS dashboards, shareable run links) has no direct equivalent: by design, Maestro Deck is self-hosted.
+- Studio accounts / seats / licenses: there are none in Deck.
+
+## Related
+
+- [YAML schema](/docs/maestro-deck/reference/yaml)
+- [CLI reference](/docs/maestro-deck/reference/cli)

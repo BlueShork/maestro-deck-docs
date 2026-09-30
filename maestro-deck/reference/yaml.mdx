@@ -1,0 +1,176 @@
+---
+title: YAML schema
+description: The full YAML schema for Maestro Deck flows, config block, steps, selectors, and built-in commands.
+---
+
+A Maestro flow is a YAML file with two parts separated by `---`: a **config block** at the top, and a **steps array** below. The same format is used by mobile.dev's Maestro CLI, Maestro Studio, and Maestro Deck, flows are portable across all three.
+
+```yaml
+appId: com.example.app    # config block
+tags: [smoke, auth]
+---
+- launchApp               # steps
+- tapOn: "Sign in"
+- inputText: "qa@example.com"
+- assertVisible: "Welcome"
+```
+
+## Config block
+
+The block above the first `---`. All fields are optional except `appId`.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `appId` | string | Bundle ID (iOS) or package name (Android). **Required.** |
+| `name` | string | Human-readable flow name. Defaults to the filename. |
+| `tags` | string[] | Free-form tags for filtering at run time. |
+| `env` | map | Variables made available to steps as `${VAR_NAME}`. |
+| `onFlowStart` | step[] | Steps to execute before the first user step. |
+| `onFlowComplete` | step[] | Steps to execute after the last user step, including on failure. |
+| `jsEngine` | `graaljs` \| `rhino` | Engine used by `evalScript`. Defaults to `graaljs`. |
+
+```yaml
+appId: com.example.app
+name: Checkout, happy path
+tags: [smoke, checkout]
+env:
+  USERNAME: qa@example.com
+  PASSWORD: hunter2
+onFlowStart:
+  - runFlow: flows/_sign-in.yaml
+onFlowComplete:
+  - clearKeychain
+---
+- tapOn: "Buy now"
+```
+
+## Selectors
+
+Most commands accept a selector as a shorthand string (`tapOn: "Sign in"` matches by text) or as a structured object. The object form supports combining fields.
+
+| Field | Description |
+| --- | --- |
+| `text` | Visible text. Supports regex when wrapped in `/.../`. |
+| `id` | Accessibility identifier. **Most stable, prefer this.** |
+| `class` | Widget class (Android) or control type (iOS). |
+| `index` | Pick the Nth match, `0`-indexed. |
+| `enabled` | `true` / `false`. |
+| `selected` | `true` / `false`. |
+| `checked` | `true` / `false`. |
+| `focused` | `true` / `false`. |
+| `width` / `height` | Constrain by pixel size. |
+| `point` | `"50%,50%"` or `"100,200"`. Last-resort. |
+
+```yaml
+- tapOn:
+    id: "login-button"
+    enabled: true
+```
+
+<Callout type="warn">
+Selectors with `point` are brittle across screen sizes. Use them only when no other field works (custom-drawn canvases, web views without IDs).
+</Callout>
+
+## Commands reference
+
+### Lifecycle
+
+| Command | Description |
+| --- | --- |
+| `launchApp` | Launch the app declared in `appId`. Accepts `clearState: true` to wipe app data first. |
+| `stopApp` | Stop the app. |
+| `clearState` | Wipe app data without relaunching. |
+| `clearKeychain` | iOS only. Clear all keychain entries for the bundle. |
+| `killApp` | Force-kill the app process. |
+
+### Interaction
+
+| Command | Description |
+| --- | --- |
+| `tapOn` | Tap the matched element. Accepts a selector. |
+| `doubleTapOn` | Double-tap. |
+| `longPressOn` | Long-press (default 1s). Pass `duration: 2000` to override. |
+| `inputText` | Type into the currently focused field. |
+| `eraseText` | Delete N characters from the focused field. Default `50`. |
+| `copyTextFrom` | Copy a matched element's text into a flow variable. |
+| `pasteText` | Paste the clipboard into the focused field. |
+| `swipe` | `from:` and `to:` (selectors or `start: "50%,80%"` / `end: "50%,20%"`). |
+| `scroll` | Scroll the screen up by one page. |
+| `scrollUntilVisible` | Scroll until a selector matches. Accepts `direction`, `speed`, `timeout`. |
+| `hideKeyboard` | Dismiss the soft keyboard. |
+| `pressKey` | Hardware keys: `Back`, `Home`, `Enter`, `Power`, volume up/down. |
+| `back` | Shortcut for `pressKey: Back`. Android only. |
+
+### Assertions
+
+| Command | Description |
+| --- | --- |
+| `assertVisible` | Fail unless the selector matches a visible element. |
+| `assertNotVisible` | Fail if the selector matches. |
+| `assertTrue` | Fail unless the JS expression is truthy: `assertTrue: ${OUTPUT.foo == 'bar'}`. |
+
+### Waits
+
+| Command | Description |
+| --- | --- |
+| `waitForAnimationToEnd` | Block until on-screen animations settle. Accepts `timeout`. |
+| `extendedWaitUntil` | Generalised wait, pass any assertion plus `timeout`. |
+
+### Flow control
+
+| Command | Description |
+| --- | --- |
+| `runFlow` | Inline another flow file. Accepts a path or a `file:` + `env:` map. |
+| `runScript` | Execute a JS file with access to flow variables. |
+| `evalScript` | Inline JS expression: `evalScript: ${output.token = '...'}`. |
+| `repeat` | Loop a block of steps. Accepts `times: N` or `while:` (an assertion). |
+| `retry` | Retry a block on failure. Accepts `maxRetries: N`. |
+
+```yaml
+- repeat:
+    times: 3
+    commands:
+      - tapOn: "Next"
+```
+
+### Device control
+
+| Command | Description |
+| --- | --- |
+| `setLocation` | Mock GPS: `setLocation: {latitude: 48.85, longitude: 2.35}`. |
+| `setAirplaneMode` | `enabled: true / false`. Android only. |
+| `toggleAirplaneMode` | Flip the current state. |
+| `addMedia` | Push a media file (image, video) into the gallery. |
+| `openLink` | Open a URL or deep link. |
+| `takeScreenshot` | Save a screenshot to `screenshots/<label>.png`. |
+| `startRecording` / `stopRecording` | Capture a screen recording over a range of steps. |
+
+## Variables
+
+Three sources, evaluated in this order:
+
+1. `env:` in the flow config.
+2. `--env KEY=value` flags passed to `maestro test`.
+3. Output of previous steps (`copyTextFrom`, `evalScript`, `runScript`).
+
+Reference them in any string with `${VAR_NAME}`:
+
+```yaml
+env:
+  USERNAME: qa@example.com
+---
+- inputText: ${USERNAME}
+- inputText: ${OUTPUT.token}
+```
+
+## Common pitfalls
+
+- **`appId` mismatch.** A flow with the wrong `appId` will launch the wrong app or do nothing visible, Maestro doesn't always error loudly.
+- **Selector ambiguity.** When two elements match, Maestro picks the first by tree order, not the most visible. Add `id` or `index` to disambiguate.
+- **`assertVisible` followed by `tapOn`.** Redundant, `tapOn` already waits for visibility. See [avoiding duplicate assertions](/docs/maestro-deck/best-practices/avoiding-duplicate-assertions).
+- **Missing `---` separator.** A flow with only a config block and no `---` is parsed as an empty steps array and exits immediately green.
+
+## Related
+
+- [CLI reference](/docs/maestro-deck/reference/cli)
+- [Config file](/docs/maestro-deck/reference/config)

@@ -1,0 +1,53 @@
+---
+title: Your first flow
+description: Write, run, and debug your first YAML flow.
+---
+
+A Maestro Deck flow is a YAML file with two parts separated by `---`: a config block at the top (at minimum, the `appId` of the app you're testing), and a list of steps below. This page walks you through writing one from scratch.
+
+## How it works
+
+<div className="fd-steps">
+
+### 1. Create the file
+
+Anywhere in your project, create a `.yaml` file. The config block goes first:
+
+```yaml
+appId: com.example.app
+---
+- launchApp
+```
+
+`appId` is the only required field, it's the bundle ID on iOS or the package name on Android. Get it wrong and the flow either launches the wrong app or does nothing visible.
+
+### 2. Add your steps
+
+Steps run top to bottom. Tap something, type something, check something:
+
+```yaml
+appId: com.example.app
+---
+- launchApp
+- tapOn: "Login"
+- inputText: "user@example.com"
+- assertVisible: "Welcome"
+```
+
+Not sure what a step does or what else is available? The [YAML schema](/docs/maestro-deck/reference/yaml) lists every command. You can also skip writing steps by hand entirely and generate them with [Inspector Mode](/docs/maestro-deck/features/inspector-mode): hover over your app, right-click a block, and pick the action.
+
+### 3. Run it
+
+Click "Run" in the toolbar. Maestro Deck executes the flow step by step against your connected simulator, emulator, or device, live, so you can watch exactly where it passes or fails.
+
+### 4. Debug what fails
+
+If a step fails, check the selector first, that's the most common cause. When two elements match the same text, Maestro Deck picks the first one in tree order, not the one you meant, add an `id` or `index` to disambiguate. See [common pitfalls](/docs/maestro-deck/reference/yaml#common-pitfalls) for the full list.
+
+</div>
+
+## Related
+
+- [YAML schema](/docs/maestro-deck/reference/yaml)
+- [Inspector Mode](/docs/maestro-deck/features/inspector-mode)
+- [Run a Test](/docs/maestro-deck/features/run-a-test)

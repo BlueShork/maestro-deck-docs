@@ -1,0 +1,139 @@
+---
+title: CLI
+description: All commands and flags accepted by the maestro CLI, with the flags Maestro Deck adds on top.
+---
+
+Maestro Deck wraps the upstream `maestro` CLI from mobile.dev. Anything that runs against `maestro test` runs against Maestro Deck, the deck adds a few flags on top, never removes any. This page is the surface, not a tutorial.
+
+## Synopsis
+
+```bash
+maestro [global flags] <command> [command flags] [arguments]
+```
+
+If `maestro` is not on your `PATH`, make sure it has been installed and exposed to your shell.
+
+## Global flags
+
+| Flag | Description |
+| --- | --- |
+| `--host <host>` | Driver host. Defaults to `localhost`. |
+| `--port <port>` | Driver port. iOS uses `idb`'s default; Android uses `adb`'s. |
+| `--device <id>` | Target a specific device or simulator by UDID / serial. Required when more than one is connected. |
+| `--platform <ios\|android>` | Force a platform when both are available. |
+| `--verbose` | Verbose logs. Pair with `--debug-output` for full traces. |
+| `--no-ansi` | Strip color codes. Use in CI. |
+| `-v`, `--version` | Print the CLI version and exit. |
+| `-h`, `--help` | Print help and exit. Works on subcommands too. |
+
+## Commands
+
+### `maestro test`
+
+Run one flow or a directory of flows.
+
+```bash
+maestro test [flags] <path>
+```
+
+`<path>` is a single `.yaml` flow or a directory. Maestro recurses into the directory and runs every `*.yaml` it finds (in lexical order, unless `config.yaml` declares a different `executionOrder`).
+
+| Flag | Description |
+| --- | --- |
+| `--include-tags <a,b>` | Run only flows tagged with any of these. OR within the list. |
+| `--exclude-tags <a,b>` | Skip flows tagged with any of these. OR within the list. |
+| `--shards <N>` | Split the suite across N parallel CI jobs. |
+| `--shard-index <I>` | Which shard this process should run, `1`-indexed. |
+| `--retries <N>` | Retry each failed flow up to N times. Default `0`. |
+| `--continue-on-failure` | Run every flow even after one fails. Exit code still reflects failures. |
+| `--debug-output <dir>` | Write per-step screenshots, view hierarchy dumps, and logs to `dir`. |
+| `--format <junit\|html>` | Emit a structured report alongside stdout. |
+| `--output <file>` | Where to write the structured report. |
+| `--env KEY=value` | Inject an env variable into the flow's `env:` scope. Repeatable. |
+| `--env-file <file>` | Load multiple `KEY=value` pairs from a file. |
+| `--flatten-debug-output` | Don't nest debug output by flow name. Easier to upload as a CI artifact. |
+
+Exit code is `0` when every flow passed, non-zero otherwise.
+
+### `maestro studio`
+
+Open the local visual flow inspector in your browser.
+
+```bash
+maestro studio [--port <port>]
+```
+
+Maestro Deck ships its own desktop inspector; `maestro studio` remains available for users who prefer the web UI.
+
+### `maestro record`
+
+Record a screen capture of a flow as it runs.
+
+```bash
+maestro record [--output <file>] <flow.yaml>
+```
+
+Writes `flow.mp4` (or the path you give) to the working directory.
+
+### `maestro hierarchy`
+
+Dump the current view hierarchy of the device under test as JSON.
+
+```bash
+maestro hierarchy [--device <id>]
+```
+
+Handy when a selector is failing and you want to see what the runner actually sees.
+
+### `maestro start-device`
+
+Boot a simulator / emulator by name.
+
+```bash
+maestro start-device --platform ios --device "iPhone 15"
+maestro start-device --platform android --device "Pixel 7 API 34"
+```
+
+Exits once the device is ready.
+
+### `maestro download-samples`
+
+Pull the official sample flow repository into `./samples/`.
+
+```bash
+maestro download-samples
+```
+
+### `maestro --version`
+
+Print the upstream Maestro version. Maestro Deck pins a specific upstream version per release; mismatches between CLI and Deck are the most common cause of "command not recognised" errors.
+
+## Maestro Deck additions
+
+These flags are added by Maestro Deck and only apply when the Deck runner is invoked (either via the desktop app or `mdeck test`):
+
+| Flag | Description |
+| --- | --- |
+| `--deck-config <file>` | Path to a Maestro Deck [config file](/docs/maestro-deck/reference/config). Defaults to `.maestro/deck.yaml`. |
+| `--deck-report <dir>` | Write the rich HTML report bundle (timeline + screenshots + hierarchy) to `dir`. |
+| `--deck-quiet` | Suppress the Deck banner. CI-friendly. |
+
+## Exit codes
+
+| Code | Meaning |
+| --- | --- |
+| `0` | All flows passed. |
+| `1` | At least one flow failed. |
+| `2` | CLI usage error (bad flag, missing argument). |
+| `3` | Device not available. |
+| `130` | Interrupted (Ctrl-C). |
+
+<Callout type="warn">
+`--continue-on-failure` does not change the exit code. A green log line is not a green CI, always check the exit code.
+</Callout>
+
+## Related
+
+- [YAML schema](/docs/maestro-deck/reference/yaml)
+- [Config file](/docs/maestro-deck/reference/config)
+- [Glossary](/docs/maestro-deck/reference/glossary)
