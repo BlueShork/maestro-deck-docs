@@ -1,6 +1,6 @@
 # Maestro Deck docs
 
-Source of the documentation published at maestrodeck.com/docs.
+Source of the documentation published at maestrodeck.cloud/docs.
 
 ## Layout
 
