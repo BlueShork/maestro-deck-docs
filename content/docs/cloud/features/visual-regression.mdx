@@ -8,7 +8,7 @@ Functional assertions tell you a button is still there. They say nothing about i
 It works the same way on `ios`, `android` and `web`.
 
 ```yaml
-- uses: BlueShork/maestro-action@v5
+- uses: BlueShork/maestro-action@v6
   id: maestro
   with:
     api_key: ${{ secrets.MAESTRO_API_KEY }}
@@ -76,7 +76,7 @@ Excluded pixels do not count in the denominator either, so masking never dilutes
 By default a visual change is recorded, not enforced: the run finishes, the report shows the diffs, and your pipeline stays green. Set `visual_strict: "true"` to fail the step when any image is `changed` or `missing`.
 
 ```yaml
-- uses: BlueShork/maestro-action@v5
+- uses: BlueShork/maestro-action@v6
   id: maestro
   with:
     api_key: ${{ secrets.MAESTRO_API_KEY }}

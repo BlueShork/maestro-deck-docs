@@ -6,7 +6,7 @@ description: Run your Maestro flows on MaestroDeck Cloud from CI with a single G
 The official [`BlueShork/maestro-action`](https://github.com/BlueShork/maestro-action) lets you run your Maestro flows on **MaestroDeck Cloud** straight from GitHub Actions. One step uploads your app and flows, runs them on a real simulator or emulator, waits for the result, and **fails the build if the tests fail**. No runner to provision, no simulator to boot in CI.
 
 ```yaml
-- uses: BlueShork/maestro-action@v5
+- uses: BlueShork/maestro-action@v6
   with:
     api_key: ${{ secrets.MAESTRO_API_KEY }}
     platform: android
@@ -83,7 +83,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       # ... build your APK into build/app-release.apk ...
-      - uses: BlueShork/maestro-action@v5
+      - uses: BlueShork/maestro-action@v6
         with:
           api_key: ${{ secrets.MAESTRO_API_KEY }}
           platform: android
@@ -96,7 +96,7 @@ jobs:
 Point `app` at a zipped `.app` bundle and `platform` at `ios`:
 
 ```yaml
-- uses: BlueShork/maestro-action@v5
+- uses: BlueShork/maestro-action@v6
   with:
     api_key: ${{ secrets.MAESTRO_API_KEY }}
     platform: ios
@@ -109,7 +109,7 @@ Point `app` at a zipped `.app` bundle and `platform` at `ios`:
 Read `report_url`, `status` or `job_id` in later steps. Use `if: always()` so the link is printed even when the run fails:
 
 ```yaml
-- uses: BlueShork/maestro-action@v5
+- uses: BlueShork/maestro-action@v6
   id: maestro
   with:
     api_key: ${{ secrets.MAESTRO_API_KEY }}
@@ -120,9 +120,23 @@ Read `report_url`, `status` or `job_id` in later steps. Use `if: always()` so th
   run: echo "Report: ${{ steps.maestro.outputs.report_url }}"
 ```
 
+
+## Video walkthrough
+
+<video
+  src="/docs/media/pipeline_demo.mp4"
+  poster="/docs/media/pipeline_demo_poster.webp"
+  width={1600}
+  height={1066}
+  controls
+  playsInline
+  preload="metadata"
+  style={{ width: "100%", height: "auto", borderRadius: "0.5rem" }}
+/>
+
 ## Notes
 
 - `flow` accepts a single file (`.maestro/login.yaml`), a glob (`.maestro/*.yaml`), or a directory (`.maestro/`, which picks up every `.yaml` / `.yml` inside).
 - Each step invocation consumes **one run** from your MaestroDeck quota.
 - The action needs `curl` and `jq`, both preinstalled on GitHub-hosted runners.
-- Pin to a version tag (`@v5`) for stable behaviour, or pin a full SHA if you want byte-for-byte reproducibility. `@v1` predates web and visual regression support.
+- Pin to a version tag (`@v6`) for stable behaviour, or pin a full SHA if you want byte-for-byte reproducibility. `@v1` predates web and visual regression support.

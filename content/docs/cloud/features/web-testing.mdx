@@ -6,7 +6,7 @@ description: Run Maestro flows against a website in the cloud from GitHub Action
 Maestro Deck Cloud runs your flows against a website in a real Chromium browser, the same way it runs them against an iOS simulator or an Android emulator. There is no build to produce and no artifact to upload: the target is a URL.
 
 ```yaml
-- uses: BlueShork/maestro-action@v5
+- uses: BlueShork/maestro-action@v6
   with:
     api_key: ${{ secrets.MAESTRO_API_KEY }}
     platform: web
@@ -44,7 +44,7 @@ Test a deployed preview instead, and feed the action the URL your deploy step pr
 ```yaml
 - id: deploy
   run: ./scripts/deploy-preview.sh
-- uses: BlueShork/maestro-action@v5
+- uses: BlueShork/maestro-action@v6
   with:
     api_key: ${{ secrets.MAESTRO_API_KEY }}
     platform: web
@@ -59,7 +59,7 @@ Web runs open the browser at **1512x982** by default, the logical resolution of 
 Set `screen_size` to run at another viewport:
 
 ```yaml
-- uses: BlueShork/maestro-action@v5
+- uses: BlueShork/maestro-action@v6
   with:
     api_key: ${{ secrets.MAESTRO_API_KEY }}
     platform: web
@@ -94,7 +94,7 @@ jobs:
         size: ["390x844", "1024x768", "1512x982"]
     steps:
       - uses: actions/checkout@v4
-      - uses: BlueShork/maestro-action@v5
+      - uses: BlueShork/maestro-action@v6
         with:
           api_key: ${{ secrets.MAESTRO_API_KEY }}
           platform: web
